@@ -4,6 +4,14 @@
 /TnF3D/obj
 /TnF3D/ProjectSettings
 /TnF3D/Temp
+*.bst
+*.cls
+*.aux
+*.bbl
+*.blg
+*.dvi
+*.log
+*.gz
 *.zip
 *.sln
 *.csproj
