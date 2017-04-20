@@ -1,0 +1,12 @@
+/Proposal/*
+/Progress/*
+/TnF3D/Library/*
+/TnF3D/obj
+/TnF3D/ProjectSettings
+/TnF3D/Temp
+*.zip
+*.sln
+*.csproj
+*.userprefs
+*.v12.suo
+*.meta
