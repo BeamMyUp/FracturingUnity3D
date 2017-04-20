@@ -4,6 +4,7 @@
 /TnF3D/obj
 /TnF3D/ProjectSettings
 /TnF3D/Temp
+/TnF3D/.vs
 *.bst
 *.cls
 *.aux
