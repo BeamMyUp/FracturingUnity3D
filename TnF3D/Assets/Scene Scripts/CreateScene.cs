@@ -10,13 +10,13 @@ public class CreateScene : MonoBehaviour {
     void CreateSquareMesh(ref FracMesh go)
     {
         List<int> indices = new List<int>();
-        for (int y = 0; y < meshPoints - 1; ++y)
+        for (int z = 0; z < meshPoints - 1; ++z)
             for (int x = 0; x < meshPoints - 1; ++x)
             {
-                int val_ul = x + (y * meshPoints);
-                int val_ur = x + (y * meshPoints) + 1;
-                int val_bl = x + ((y + 1) * meshPoints);
-                int val_br = x + ((y + 1) * meshPoints) + 1;
+                int val_ul = x + (z * meshPoints);
+                int val_ur = x + (z * meshPoints) + 1;
+                int val_bl = x + ((z + 1) * meshPoints);
+                int val_br = x + ((z + 1) * meshPoints) + 1;
 
                 indices.Add(val_ul);
                 indices.Add(val_bl);
@@ -36,10 +36,10 @@ public class CreateScene : MonoBehaviour {
         int higherlim = lowerlim + (meshPoints % 2); 
 
         // create all spheres
-        for (int y = -lowerlim; y < higherlim; ++y)
+        for (int z = -lowerlim; z < higherlim; ++z)
             for (int x = -lowerlim; x < higherlim; ++x)
             {
-                Vector3 pos = new Vector3(x, y, 0);
+                Vector3 pos = new Vector3(x, 0, z);
                 fm.CreateParticle(pos, fm.nParticles); 
             }
 

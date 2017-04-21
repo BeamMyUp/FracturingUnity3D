@@ -3,7 +3,7 @@
 using UnityEngine;
 using System.Collections;
 
-public class DragAndDrop : MonoBehaviour
+public class DragDrop : MonoBehaviour
 {
     private bool _mouseState;
     private GameObject target;
@@ -41,7 +41,7 @@ public class DragAndDrop : MonoBehaviour
             if(target.GetComponent<Rigidbody>())
             {
                 Vector3 force = curPosition - target.transform.position; 
-                target.GetComponent<Rigidbody>().AddForce(force * 8); 
+                target.GetComponent<Rigidbody>().AddForce(force * 20); 
             }
             else
             {

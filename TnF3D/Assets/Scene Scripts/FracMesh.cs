@@ -59,7 +59,6 @@ public class FracMesh
 
         particle.transform.position = position;
         particle.transform.localScale = new Vector3(0.5f, 0.5f, 0.5f);
-        particle.AddComponent<DragAndDrop>();
         particles.Insert(idListPos, particle);
     }
 
