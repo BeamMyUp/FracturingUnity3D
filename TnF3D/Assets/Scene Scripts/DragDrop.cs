@@ -50,7 +50,6 @@ public class DragAndDrop : MonoBehaviour
         }
     }
 
-
     GameObject GetClickedObject(out RaycastHit hit)
     {
         GameObject target = null;

@@ -55,13 +55,21 @@ A lot of different objects, when under some persistent and or increasing forces,
 
 The project proposed is the implementation of an interactive application allowing for deformation, tearing and fracturing of meshes in real-time, according to the method described in \cite{Parker:2009:RTD}. Optionally (in function of the advancement and progress rate), to improve the deformation of a mesh the technique described by \cite{Rivers:2007:FFL} will also be implemented. 
 
+\section{Methodology}
+\begin{list}
+\item Implementation of a basic fps camera, and of a picker (modified for using forces)
+\item Creation of the scene : 
+	\begin{list}
+	\item Create particles as gameobjects with sphere primitives, having bound the Rigid Body script as component to enable PhysX (Unity's physics engine) calculations of collisions.
+	\item bind particles with joints. Used HingeJoints (describe various tests done). Add reflexion about use of spring.cs (and actually use it if have time to)
+	\item Create a mesh having vertices at the particles' position. 
+	\item reupdate the mesh according to the particles new positions (indices stay the same
+	\item Although the scene is in 3D, all calculations and implementations take into account that we are only dealing with planes.  
+	\end{list}
+\item Fracturing...
 
-\section{Development plan and Methodology}
-This project requires a fully functional 3D viewer with a good object picking feature - able to return a point on the object - and a lot of flexibility concerning the modification of an object and its vertices. Justified by a need for focus and time constraints, this project will be implemented using custom scripts in a basic Unity Project. The latter will provide the needed functions and tools that are not directly related to the objectives of the project. 
+\end{list}
 
-The different steps of the development will be to set up the project's environment such as the interaction queries in the game loop, a visual aid to see the force being applied through picking and a parametrization of the force affecting an object's vertices according to the user's interaction, etc. An implementation of the mesh's deformation and vertices' position modification will be needed as well as the ability of fragmenting a mesh, before finally digging into the implementation of fracturing.
-
-The challenging part of this project will reside in attacking the core of \cite{Parker:2009:RTD}'s work, meaning the fracturing algorithm itself and the redefinition of the objects' structures. Unity provides some already implemented parts of this project on which it will be possible to fall-back if some doesn't turn out as planned.
 
 \subsection{Additional concepts and tools needed}
 
@@ -77,24 +85,6 @@ Collision Detection & Unity's physic engine\\
 \hline
 \end{tabular}
 
-\subsection{Milestones and objectives}
-The following schedule takes other courses' deadlines into account for a realistic distribution of the workload. 
-
-\begin{tabular}{|c|c|}
-\hline
-Objectives & Deadlines\\
-\hline
-\hline
-Setup project's environment and tools & March 26th\\
-Linearized Backward Euler Integrator & March 29th\\
-Section 3 of \cite{Parker:2009:RTD}) & April 6th \\
-Section 4 of \cite{Parker:2009:RTD} & April 15th\\
-Section 5 of \cite{Parker:2009:RTD} & April 19th\\
-\cite{Rivers:2007:FFL} improvement & April 23rd\\
-Report Writing & April 26th\\
-Video and Presentation & April 27th \\
-\hline
-\end{tabular}
 
 %%\section{Figures and Tables and Captions}
 
