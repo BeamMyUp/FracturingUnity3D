@@ -6,10 +6,12 @@ public class CreateScene : MonoBehaviour {
 
     List<FracMesh> objects = new List<FracMesh>(); 
     public int meshPoints;
-    
+
+    // TODO: should be refactored. Indices creation shouldn't be independent of vertices/particles creation
     void CreateSquareMesh(ref FracMesh go)
     {
         List<int> indices = new List<int>();
+
         for (int z = 0; z < meshPoints - 1; ++z)
             for (int x = 0; x < meshPoints - 1; ++x)
             {
@@ -21,10 +23,12 @@ public class CreateScene : MonoBehaviour {
                 indices.Add(val_ul);
                 indices.Add(val_bl);
                 indices.Add(val_br);
+                go.CreateTriangle(val_ul, val_bl, val_br);
 
                 indices.Add(val_ul);
                 indices.Add(val_br);
                 indices.Add(val_ur);
+                go.CreateTriangle(val_ul, val_br, val_ur);
             }
 
         go.CreateMesh(indices.ToArray()); 
@@ -69,7 +73,7 @@ public class CreateScene : MonoBehaviour {
         floorPlane.transform.localScale = new Vector3(2, 1, 2);
 
         // Create a first Particles_Mesh
-        FracMesh initObject = new FracMesh();
+        FracMesh initObject = new FracMesh(2650000, 3970000, 264, 397);
 
         CreateSpringGrid(ref initObject);
         CreateSquareMesh(ref initObject);

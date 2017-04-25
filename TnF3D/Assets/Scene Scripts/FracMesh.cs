@@ -6,6 +6,22 @@ public class FracMesh
 {
     GameObject go = new GameObject("Fracturable Mesh");
     List<GameObject> particles = new List<GameObject>();
+    List<FracTriangle> triangles = new List<FracTriangle>();
+
+    // Material properties
+    double mu; // Lame constant mu : material's rigidity
+    double lambda; // Lame constant lambda : resistance to changes in volume (dilation)
+    double phi;
+    double psi;
+
+    // TODO: find phi and psi meaning...
+    public FracMesh(double rigidity, double dilation, double aPhi, double aPsi)
+    {
+        mu = rigidity;
+        lambda = dilation;
+        phi = aPhi;
+        psi = aPsi;
+    }
 
     public int nParticles
     {
@@ -59,6 +75,13 @@ public class FracMesh
         particle.transform.position = position;
         particle.transform.localScale = new Vector3(0.5f, 0.5f, 0.5f);
         particles.Insert(idListPos, particle);
+    }
+
+    public void CreateTriangle(int id1, int id2, int id3)
+    {
+        Matrix4x4 world2Object = go.transform.worldToLocalMatrix;
+        FracTriangle newTriangle = new FracTriangle(world2Object, particles[id1], particles[id2], particles[id3], mu, lambda, phi, psi);
+        triangles.Add(newTriangle); 
     }
 
     public void AttachSpring(int iRb1, int iRb2)
