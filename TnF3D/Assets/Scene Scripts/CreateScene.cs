@@ -4,11 +4,11 @@ using UnityEngine;
 
 public class CreateScene : MonoBehaviour {
 
-    List<FracMesh> objects = new List<FracMesh>(); 
+    List<GameObject> fracMeshes = new List<GameObject>(); 
     public int meshPoints;
 
     // TODO: should be refactored. Indices creation shouldn't be independent of vertices/particles creation
-    void CreateSquareMesh(ref FracMesh go)
+    void CreateSquareMesh(FracMesh fm)
     {
         List<int> indices = new List<int>();
 
@@ -23,18 +23,18 @@ public class CreateScene : MonoBehaviour {
                 indices.Add(val_ul);
                 indices.Add(val_bl);
                 indices.Add(val_br);
-                go.CreateTriangle(val_ul, val_bl, val_br);
+                fm.CreateTriangle(val_ul, val_bl, val_br);
 
                 indices.Add(val_ul);
                 indices.Add(val_br);
                 indices.Add(val_ur);
-                go.CreateTriangle(val_ul, val_br, val_ur);
+                fm.CreateTriangle(val_ul, val_br, val_ur);
             }
 
-        go.CreateMesh(indices.ToArray()); 
+        fm.CreateMesh(indices.ToArray()); 
     }
 
-    void CreateSpringGrid(ref FracMesh fm)
+    void CreateSpringGrid(FracMesh fm)
     {
         int lowerlim = meshPoints / 2;
         int higherlim = lowerlim + (meshPoints % 2); 
@@ -72,21 +72,20 @@ public class CreateScene : MonoBehaviour {
         floorPlane.transform.position = new Vector3(0, -meshPoints/2 - 1, 0);
         floorPlane.transform.localScale = new Vector3(2, 1, 2);
 
-        // Create a first Particles_Mesh
-        FracMesh initObject = new FracMesh(2650000, 3970000, 264, 397);
+        // Create a first Fracturable Mesh
+        GameObject initObject = new GameObject();
+        FracMesh fm = initObject.AddComponent<FracMesh>();
+        fm.InitializeFracMesh(2650000, 3970000, 264, 397);
 
-        CreateSpringGrid(ref initObject);
-        CreateSquareMesh(ref initObject);
+        CreateSpringGrid(fm);
+        CreateSquareMesh(fm);
 
-        objects.Add(initObject);
+        fracMeshes.Add(initObject);
     }
     
 	// Update is called once per frame
 	void Update ()
     {
-        for(int i = 0; i < objects.Count; ++i)
-        {
-            objects[i].UpdateMesh(); 
-        }
+        
 	}
 }

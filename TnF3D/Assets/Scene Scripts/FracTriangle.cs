@@ -7,9 +7,7 @@ using MathNet.Numerics.LinearAlgebra;
 // Note : When extending for full meshes (not only planes) this class would become about tetrahedral instead of triangles. 
 public class FracTriangle {
 
-    GameObject p1;
-    GameObject p2;
-    GameObject p3;
+    GameObject[] p;
 
     Matrix4x4 world2Material; // The world to object space matrix of the mapped mesh
 
@@ -26,9 +24,7 @@ public class FracTriangle {
 
     public FracTriangle(
         Matrix4x4 aWorld2MaterialTransform, 
-        GameObject aParticle1, 
-        GameObject aParticle2, 
-        GameObject aParticle3,
+        GameObject[] aParticleList, 
         double aMu,
         double aLambda,
         double aPhi,
@@ -36,32 +32,49 @@ public class FracTriangle {
     {
         world2Material = aWorld2MaterialTransform;
 
-        p1 = aParticle1;
-        p2 = aParticle2;
-        p3 = aParticle3;
+        p = aParticleList;
+        Assert.AreEqual(3, aParticleList.Length, "FracTriangle: the particle list given have more or less than 3 points"); 
 
         mu = aMu;
         lambda = aLambda;
         phi = aPhi;
         psi = aPsi;
-
-        UpdateMatrices();
-        CalculateInternalStress(); 
     }
 
-    public void CalculateInternalStress()
+    public void CalculateForces()
     {
+        UpdateMatrices();
+
         Matrix<double> strain = Matrix<double>.Build.Dense(3, 3);
         Matrix<double> strainRate = Matrix<double>.Build.Dense(3, 3, 0);
         Matrix<double> elasticStress = Matrix<double>.Build.Dense(3, 3);
         Matrix<double> viscousStress = Matrix<double>.Build.Dense(3, 3);
 
         CalculateTensors(strain, strainRate, elasticStress, viscousStress);
-        Matrix<double> stress = elasticStress + viscousStress; 
+        Matrix<double> stress = elasticStress + viscousStress;
+
+        // Pre-compute area
+        Vector3 a = p[0].transform.position;
+        Vector3 b = p[1].transform.position;
+        Vector3 c = p[2].transform.position;
+
+        double halfVolume = (a.x * (b.y - c.y) + b.x * (c.y - a.y) + c.x * (a.y - b.y)) / 2.0d;
+        halfVolume = System.Math.Abs(halfVolume) / 2.0d; 
+
+        // For all points
+        for (int i = 0; i < 3; ++i)
+        {
+            Vector<double> force = Vector<double>.Build.Dense(3);
+            CalculatePointInternalForce(force, i, halfVolume, stress);
+
+            FracParticle fp = p[i].GetComponent<FracParticle>();
+            fp.AddForce(force);
+        }
+
     }
 
-    public void CalculateTensors(Matrix<double> strainTensor, Matrix<double> strainRateTensor, 
-                                 Matrix<double> elasticStressTensor, Matrix<double> viscousStressTensor)
+    private void CalculateTensors(Matrix<double> strainTensor, Matrix<double> strainRateTensor, 
+                                  Matrix<double> elasticStressTensor, Matrix<double> viscousStressTensor)
     {
         // Calculate Partials
         Matrix<double> PB = P * beta;
@@ -88,7 +101,7 @@ public class FracTriangle {
         CalculateStressTensor(viscousStressTensor, strainRateTensor, phi, psi);
     }
 
-    public void CalculateStrainTensor(Matrix<double> tensor, Vector<double> dxdu1, Vector<double> dxdu2, Vector<double> dxdu3)
+    private void CalculateStrainTensor(Matrix<double> tensor, Vector<double> dxdu1, Vector<double> dxdu2, Vector<double> dxdu3)
     {
         // Diagonal
         tensor[0, 0] = dxdu1.DotProduct(dxdu1) - 1;
@@ -101,7 +114,7 @@ public class FracTriangle {
         tensor[1, 2] = tensor[2, 1] = dxdu2.DotProduct(dxdu3);
     }
 
-    public void CalculateStrainRateTensor(Matrix<double> tensor, 
+    private void CalculateStrainRateTensor(Matrix<double> tensor, 
                                           Vector<double> dxdu1, Vector<double> dxdu2, Vector<double> dxdu3,
                                           Vector<double> dx_du1, Vector<double> dx_du2, Vector<double> dx_du3)
     {
@@ -116,7 +129,7 @@ public class FracTriangle {
         tensor[1, 2] = tensor[2, 1] = dxdu2.DotProduct(dx_du3) + dxdu3.DotProduct(dx_du2);
     }
 
-    public void CalculateStressTensor(Matrix<double> stress, Matrix<double> tensor, double a, double b)
+    private void CalculateStressTensor(Matrix<double> stress, Matrix<double> tensor, double a, double b)
     {
         // TODO: optimise using the symmetry of the tensor (stress will also be symmetric)
         for (int j = 0; j < 3; ++j)
@@ -132,14 +145,47 @@ public class FracTriangle {
             }
     }
 
-    public void UpdateMatrices()
+    // TODO: There is certainly a better way of implementing this equation. Check it out when everything works
+    private void CalculatePointInternalForce(Vector<double> outForce, int i, double halfVolume, Matrix<double> totalStress)
+    {
+        outForce.Clear();
+
+        Vector<double> pos = Vector<double>.Build.Dense(3);
+        for (int comp = 0; comp < 3; ++comp)
+            pos[comp] = p[i].transform.position[comp];
+
+        // For all points
+        for (int j = 0; j < 3; ++j)
+        {
+            double outerSum = 0;
+
+            for (int k = 0; k < 3; ++k)
+            {
+                double innerSum = 0;
+
+                for (int l = 0; l < 3; ++l)
+                {
+                    innerSum += beta[j, l] * beta[i, k] * totalStress[k, l];
+                }
+
+                outerSum += innerSum;
+            }
+
+            outForce += pos * outerSum;
+
+        }
+        
+        outForce *= -halfVolume;
+    }
+
+    private void UpdateMatrices()
     {
         UpdateBeta();
         UpdateP();
         UpdateV();
     }
 
-    public void UpdateBeta()
+    private void UpdateBeta()
     {
         /* The Beta matrix is the inverse of the matrix made of the three points'
          * position in the material space
@@ -153,9 +199,9 @@ public class FracTriangle {
          * the Object Space of the mesh mapped onto the particles.
          */
 
-        Vector3 m1 = world2Material * p1.transform.position;
-        Vector3 m2 = world2Material * p2.transform.position;
-        Vector3 m3 = world2Material * p3.transform.position;
+        Vector3 m1 = world2Material * p[0].transform.position;
+        Vector3 m2 = world2Material * p[1].transform.position;
+        Vector3 m3 = world2Material * p[2].transform.position;
 
         for (int i = 0; i < 3; ++i)
         {
@@ -167,21 +213,21 @@ public class FracTriangle {
         beta = beta.Inverse();
     }
 
-    public void UpdateP()
+    private void UpdateP()
     {
         for (int i = 0; i < 3; ++i)
         {
-            P[i, 0] = p1.transform.position[i];
-            P[i, 1] = p2.transform.position[i];
-            P[i, 2] = p3.transform.position[i];
+            P[i, 0] = p[0].transform.position[i];
+            P[i, 1] = p[1].transform.position[i];
+            P[i, 2] = p[2].transform.position[i];
         }
     }
 
-    public void UpdateV()
+    private void UpdateV()
     {
-        Rigidbody r1 = p1.GetComponent<Rigidbody>();
-        Rigidbody r2 = p2.GetComponent<Rigidbody>();
-        Rigidbody r3 = p3.GetComponent<Rigidbody>();
+        Rigidbody r1 = p[0].GetComponent<Rigidbody>();
+        Rigidbody r2 = p[1].GetComponent<Rigidbody>();
+        Rigidbody r3 = p[2].GetComponent<Rigidbody>();
 
         Assert.IsNotNull(r1, "FracTriangle.cs : P1 has no Rigidbody component");
         Assert.IsNotNull(r2, "FracTriangle.cs : P2 has no Rigidbody component");
