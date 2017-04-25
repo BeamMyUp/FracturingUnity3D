@@ -54,8 +54,7 @@ public class FracMesh
     public void CreateParticle(Vector3 position, int idListPos)
     {
         GameObject particle = GameObject.CreatePrimitive(PrimitiveType.Sphere);
-        particle.AddComponent<Rigidbody>();
-        particle.AddComponent<FracParticle>(); 
+        particle.AddComponent<Rigidbody>(); 
 
         particle.transform.position = position;
         particle.transform.localScale = new Vector3(0.5f, 0.5f, 0.5f);
