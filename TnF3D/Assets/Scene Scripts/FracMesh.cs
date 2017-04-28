@@ -1,6 +1,7 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using MathNet.Numerics.LinearAlgebra;
 
 public class FracMesh : MonoBehaviour
 {
@@ -115,7 +116,13 @@ public class FracMesh : MonoBehaviour
             triangles[i].CalculateForces();
         }
 
-        // 1. Find what links get broken
+        // Check if there are fractures at a particle's point
+        for(int i = 0; i < particles.Count; ++i)
+        {
+            List<Vector<double>> planes = new List<Vector<double>>();
+            particles[i].GetComponent<FracParticle>().isFracturing(mu, planes); // TODO: verify mu is material's toughness
+        }
+
 
         // 2. duplicate particles where the link breaks (either one of the particles)
         // 3. Re-evaluate links with the new particle
@@ -134,7 +141,7 @@ public class FracMesh : MonoBehaviour
 
     void Update()
     {
+        Fracture();
         UpdateMesh();
-        Fracture(); 
     }
 }

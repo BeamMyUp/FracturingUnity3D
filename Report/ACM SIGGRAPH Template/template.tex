@@ -13,6 +13,8 @@
 
 \documentclass[tog]{acmsiggraph}
 
+\usepackage[normalem]{ulem}
+
 %%% Make the ``BibTeX'' word pretty...
 
 \def\BibTeX{{\rm B\kern-.05em{\sc i\kern-.025em b}\kern-.08em
@@ -50,25 +52,30 @@ Lucasfilm Ltd. All rights reserved. Image taken from Parker and O'Brien, 2009}
 
 \copyrightspace
 
+\section{Abstract}
+
 \section{Introduction}
 A lot of different objects, when under some persistent and or increasing forces, will end up getting distorted and breaking apart. Because virtual objects are often put in such situations in video games, movies or simulations, addressing this topic is very pertinent and interesting in order to recreate realistic sequences.  
 
 The project proposed is the implementation of an interactive application allowing for deformation, tearing and fracturing of meshes in real-time, according to the method described in \cite{Parker:2009:RTD}. Optionally (in function of the advancement and progress rate), to improve the deformation of a mesh the technique described by \cite{Rivers:2007:FFL} will also be implemented. 
 
-\section{Methodology}
-\begin{list}
-\item Implementation of a basic fps camera, and of a picker (modified for using forces)
-\item Creation of the scene : 
-	\begin{list}
+\section{Related Work}
+
+\section{Technical details}
+
+\begin{itemize}
+\item \sout{Implementation of a basic fps camera, and of a picker (modified for using forces)}  
+\item Creation of the scene: 
+	\begin{itemize}
 	\item Create particles as gameobjects with sphere primitives, having bound the Rigid Body script as component to enable PhysX (Unity's physics engine) calculations of collisions.
 	\item bind particles with joints. Used HingeJoints (describe various tests done). Add reflexion about use of spring.cs (and actually use it if have time to)
 	\item Create a mesh having vertices at the particles' position. 
 	\item reupdate the mesh according to the particles new positions (indices stay the same
 	\item Although the scene is in 3D, all calculations and implementations take into account that we are only dealing with planes.  
-	\end{list}
+	\end{itemize}
 \item Fracturing...
 
-\end{list}
+\end{itemize}
 
 
 \subsection{Additional concepts and tools needed}
@@ -84,6 +91,21 @@ Linearized Backward Euler Integrator & Self-Implemented\\
 Collision Detection & Unity's physic engine\\
 \hline
 \end{tabular}
+
+\subsection{Implementation}
+
+The methods and algorithms described were implemented in Unity3D with the use of custom scripts. The project's setup is a scene composed of three (3) \textit{GameObject}s; a \textit{Camera}, a \textit{Light} and a \textit{Scene Manager}. To allow interaction with the objects, a basic First Person Camera behaviour was implemented and added to the \textit{Camera object}. The \textit{Scene Manager} object has two \textit{Script Components}. The first one describes the creation of the test scene, with an object that can be fractured (called \textit{FracMesh}) and the second one allows for picking and dragging objects in the scene using an external force. 
+
+\subsection{Scene Creation}
+
+The test scene has only one object which can be fractured and a plane. The breakable object is forced to be a plane itslef for simplification purpose, and it's size can be fixed by a parameter available to the user. The decision of limiting the shape of the object to a plane allows to treat it as a simple 2D mesh and implement \cite{Obrien:1999:GMA}'s fracturing algorithm using triangles instead of tetrahedrons. 
+
+\section{Results}
+
+\section{Conclusions}
+
+
+
 
 
 %%\section{Figures and Tables and Captions}

@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Assertions;
 using MathNet.Numerics.LinearAlgebra;
+using MathNet.Numerics.LinearAlgebra.Factorization;
 
 // Note : When extending for full meshes (not only planes) this class would become about tetrahedral instead of triangles. 
 public class FracTriangle {
@@ -20,7 +21,11 @@ public class FracTriangle {
     double mu; // Lame constant mu : material's rigidity
     double lambda; // Lame constant lambda : resistance to changes in volume (dilation)
     double phi;
-    double psi; 
+    double psi;
+
+    // Triangle property
+    double halfArea;
+    List<Vector<double>> forcesP = new List<Vector<double>>(); // Forces in the order of the points
 
     public FracTriangle(
         Matrix4x4 aWorld2MaterialTransform, 
@@ -41,9 +46,11 @@ public class FracTriangle {
         psi = aPsi;
     }
 
+
+
     public void CalculateForces()
     {
-        UpdateMatrices();
+        Update();
 
         Matrix<double> strain = Matrix<double>.Build.Dense(3, 3);
         Matrix<double> strainRate = Matrix<double>.Build.Dense(3, 3, 0);
@@ -53,24 +60,16 @@ public class FracTriangle {
         CalculateTensors(strain, strainRate, elasticStress, viscousStress);
         Matrix<double> stress = elasticStress + viscousStress;
 
-        // Pre-compute area
-        Vector3 a = p[0].transform.position;
-        Vector3 b = p[1].transform.position;
-        Vector3 c = p[2].transform.position;
-
-        double halfVolume = (a.x * (b.y - c.y) + b.x * (c.y - a.y) + c.x * (a.y - b.y)) / 2.0d;
-        halfVolume = System.Math.Abs(halfVolume) / 2.0d; 
-
         // For all points
         for (int i = 0; i < 3; ++i)
         {
             Vector<double> force = Vector<double>.Build.Dense(3);
-            CalculatePointInternalForce(force, i, halfVolume, stress);
-
-            FracParticle fp = p[i].GetComponent<FracParticle>();
-            fp.AddForce(force);
+            CalculatePointForce(force, i, stress);
+            forcesP.Add(force);
         }
 
+        // Separate stress tensor into tensile and compressive components
+        CalculateTensilAndCompressive(stress);
     }
 
     private void CalculateTensors(Matrix<double> strainTensor, Matrix<double> strainRateTensor, 
@@ -145,8 +144,8 @@ public class FracTriangle {
             }
     }
 
-    // TODO: There is certainly a better way of implementing this equation. Check it out when everything works
-    private void CalculatePointInternalForce(Vector<double> outForce, int i, double halfVolume, Matrix<double> totalStress)
+    
+    private void CalculatePointForce(Vector<double> outForce, int i, Matrix<double> totalStress)
     {
         outForce.Clear();
 
@@ -175,14 +174,51 @@ public class FracTriangle {
 
         }
         
-        outForce *= -halfVolume;
+        outForce *= -halfArea;
     }
 
-    private void UpdateMatrices()
+    private void CalculateTensilAndCompressive(Matrix<double> stress)
+    {
+        Evd<double> evd = stress.Evd();
+        Matrix<double> tensileComp = Matrix<double>.Build.Dense(3, 3);
+        Matrix<double> compressiveComp = Matrix<double>.Build.Dense(3, 3);
+
+        for(int i = 0; i < 3; ++i)
+        {
+            double eval = evd.EigenValues[i].Real;
+            Matrix<double> m = Utilities.BuildM(evd.EigenVectors.Column(i).Normalize(2)); 
+
+            tensileComp += System.Math.Max(0, eval) * m;
+            compressiveComp += System.Math.Min(0, eval) * m; 
+        }
+
+        for(int i = 0; i < 3; ++i)
+        {
+            Vector<double> ftensil = Vector<double>.Build.Dense(3);
+            Vector<double> fcompressive = Vector<double>.Build.Dense(3);
+            CalculatePointForce(ftensil, i, tensileComp);
+
+            fcompressive = forcesP[i] - ftensil;
+
+            FracParticle fp = p[i].GetComponent<FracParticle>();
+            fp.AddTensilLoad(ftensil);
+            fp.AddCompressiveLoad(fcompressive); 
+        }
+
+    }
+
+    private void Update()
     {
         UpdateBeta();
         UpdateP();
         UpdateV();
+
+        // Pre-compute area
+        Vector3 ab = p[1].transform.position - p[0].transform.position;
+        Vector3 ac = p[2].transform.position - p[0].transform.position;
+
+        halfArea = Vector3.Cross(ab, ac).magnitude / 2.0d; 
+        halfArea = System.Math.Abs(halfArea) / 2.0d;
     }
 
     private void UpdateBeta()
