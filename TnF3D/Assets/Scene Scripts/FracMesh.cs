@@ -52,13 +52,17 @@ public class FracMesh : MonoBehaviour
         MeshRenderer mr = gameObject.GetComponent<MeshRenderer>();
         mr.material = new Material(Shader.Find("Diffuse"));
         mr.material.color = new Color(0.3f, 0.5f, 0.6f, 1.0f);
+
+        // pin first particle
+        particles[0].GetComponent<Rigidbody>().mass = 3;
     }
 
     public void CreateParticle(Vector3 position, int idListPos)
     {
         GameObject particle = GameObject.CreatePrimitive(PrimitiveType.Sphere);
-        particle.AddComponent<Rigidbody>();
         particle.AddComponent<FracParticle>();
+        var rb = particle.AddComponent<Rigidbody>();
+        rb.mass = 10;
 
         particle.transform.position = position;
         particle.transform.localScale = new Vector3(0.5f, 0.5f, 0.5f);
@@ -76,16 +80,19 @@ public class FracMesh : MonoBehaviour
 
     public void AttachSpring(int iRb1, int iRb2)
     {
-        HingeJoint joint = particles[iRb1].AddComponent<HingeJoint>();
-        joint.connectedBody = particles[iRb2].GetComponent<Rigidbody>();
+        //HingeJoint joint = particles[iRb1].AddComponent<HingeJoint>();
+        //joint.connectedBody = particles[iRb2].GetComponent<Rigidbody>();
 
-        JointSpring js = joint.spring;
-        js.spring = 100;
-        js.damper = 10;
-        js.targetPosition = 0;
+        //JointSpring js = joint.spring;
+        //js.spring = 100;
+        //js.damper = 10;
+        //js.targetPosition = 0;
 
-        joint.spring = js;
-        joint.useSpring = true;
+        //joint.spring = js;
+        //joint.useSpring = true;
+
+        Spring joint = particles[iRb1].AddComponent<Spring>();
+        joint.Initialize(particles[iRb1].GetComponent<Rigidbody>(), particles[iRb2].GetComponent<Rigidbody>()); 
     }
 
     private void UpdateMesh()

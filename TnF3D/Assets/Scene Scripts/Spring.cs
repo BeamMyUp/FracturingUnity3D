@@ -8,15 +8,15 @@ public class Spring : MonoBehaviour {
     Rigidbody p2 = null;
 
     // Spring Stiffness
-    public static double k = 1;
+    public static double k = 100;
 
     // Spring damping
-    public static double c = 1;
+    public static double c = 10;
 
     // Rest Length
     double l0 = 0; 
 
-    public Spring(Rigidbody p1, Rigidbody p2)
+    public void Initialize(Rigidbody p1, Rigidbody p2)
     {
         this.p1 = p1;
         this.p2 = p2;
