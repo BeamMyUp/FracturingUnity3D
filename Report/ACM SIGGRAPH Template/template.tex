@@ -177,7 +177,7 @@ As this project is based of an empty 3D scene in Unity, we added some simple int
 \item $\left[alt\right]$ + Click : Rotate 
 \end{itemize}
 
-Interaction with the objects is based on a ray cast algorithm. A ray starting from the mouse's position and triggered by a click, tells whether an object was selected or not. If so, an external force is applied on the latter, defined by a vector between the initial click point and the updated mouse's position. Proceeding with a force instead of a simple drag and drop allows for the spring system to be influenced by the displacement of the selected object. 
+Interaction with the objects is based on a ray cast algorithm slightly modified from \cite{Drag}'s. A ray starting from the mouse's position and triggered by a click, tells whether an object was selected or not. If so, an external force is applied on the latter, defined by a vector between the initial click point and the updated mouse's position. Proceeding with a force instead of a simple drag and drop allows for the spring system to be influenced by the displacement of the selected object. 
 
 \subsubsection{Test Scene Creation}
 The test scene has only one object which can be fractured and a plane. The breakable object is forced to be a plane itself for simplification purpose, and it's size can be fixed by a parameter available to the user (\textit{MeshPoints}). The decision of limiting the shape of the object to a plane allows to treat it as a simple 2D mesh and implement \cite{Obrien:1999:GMA}'s fracturing algorithm using triangles instead of tetrahedrons. 
@@ -206,7 +206,7 @@ The joints that were selected are springs defined by a custom script. Connecting
 Unity's physics solver parameters have been set to the maximum number of iterations and the accuracy of the resulting velocity after a bounce was also augmented $Default\ solver\ iteration = 255$ and $Default\ solver\ velocity = 15$. This lowers the overall performance but as we are only testing for one object, the former is not an issue.
 
 \subsubsection{Remeshing}
-- Only manage one fracture plane per point... ignore all the others
+The eigenvector returned by the separation tensor corresponds to the normal of the separation plane. Once a fracture is found, we go through all triangles of the mesh to verify if they intersect with the separation plane, using \cite{Inters}'s algorithm. If so, triangles are separated along the intersection line, adding two new particles at these points and recalculating the joints between the points. Each points are also mapped to a side of another of the plane using a boolean value for which false means a node is on the negative side of the plane whereas true means the node is on the positive side. We avoid setting the side of a node two times by keeping another boolean value that informs if the calculations have already been made for the particle. 
 
 \section{Results}
 
