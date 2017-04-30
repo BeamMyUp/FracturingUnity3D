@@ -37,6 +37,15 @@ public class FracParticle : MonoBehaviour {
 
         double vp = evd.EigenValues.AbsoluteMaximum().Real;
         bool fracturesAtNode = vp > toughness; // does at least one eigenvalue exceeds toughness
+                                               //Debug.Log("vp = " + vp + "\n");
+
+        if (vp > 0)
+        {
+            int i = 2 + 3;
+            print(i); 
+        }
+
+
 
         // Note : More efficient to simply loop on all since there's just 3 eigenvalue. Sorting is not that useful here.
         for (int i = 0; fracturesAtNode && i < evd.EigenValues.Count; ++i)

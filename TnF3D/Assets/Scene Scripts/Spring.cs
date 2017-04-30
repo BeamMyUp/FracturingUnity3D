@@ -8,7 +8,7 @@ public class Spring : MonoBehaviour {
     Rigidbody p2 = null;
 
     // Spring Stiffness
-    public static double k = 100;
+    public static double k = 800;
 
     // Spring damping
     public static double c = 10;

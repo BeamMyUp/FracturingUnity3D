@@ -62,7 +62,9 @@ public class FracMesh : MonoBehaviour
         GameObject particle = GameObject.CreatePrimitive(PrimitiveType.Sphere);
         particle.AddComponent<FracParticle>();
         var rb = particle.AddComponent<Rigidbody>();
-        rb.mass = 10;
+        rb.detectCollisions = true;
+        rb.mass = 1;
+        rb.drag = 5; 
 
         particle.transform.position = position;
         particle.transform.localScale = new Vector3(0.5f, 0.5f, 0.5f);
@@ -80,17 +82,36 @@ public class FracMesh : MonoBehaviour
 
     public void AttachSpring(int iRb1, int iRb2)
     {
+        // ---- Test on HingeJoint
         //HingeJoint joint = particles[iRb1].AddComponent<HingeJoint>();
         //joint.connectedBody = particles[iRb2].GetComponent<Rigidbody>();
 
         //JointSpring js = joint.spring;
-        //js.spring = 100;
-        //js.damper = 10;
+        //js.spring = 2;
+        //js.damper = 1;
         //js.targetPosition = 0;
 
         //joint.spring = js;
         //joint.useSpring = true;
 
+        // ---- Test on Spring Joints
+        //Rigidbody rb1 = particles[iRb1].GetComponent<Rigidbody>();
+        //Rigidbody rb2 = particles[iRb2].GetComponent<Rigidbody>();
+        //
+        //SpringJoint joint = particles[iRb1].AddComponent<SpringJoint>();
+        //joint.connectedBody = rb2;
+        //
+        //joint.anchor = rb1.position;
+        //joint.connectedAnchor = joint.connectedBody.position;
+        //
+        //joint.spring = 20;
+        //joint.damper = 2;
+        //
+        //joint.minDistance = 0;
+        //joint.maxDistance = 0.0f;
+        //joint.tolerance = 0; 
+
+        // ---- Test on Custom Joints
         Spring joint = particles[iRb1].AddComponent<Spring>();
         joint.Initialize(particles[iRb1].GetComponent<Rigidbody>(), particles[iRb2].GetComponent<Rigidbody>()); 
     }
@@ -131,7 +152,7 @@ public class FracMesh : MonoBehaviour
         }
 
 
-        // 2. duplicate particles where the link breaks (either one of the particles)
+        // 2. duplicate particles where the link breaks
         // 3. Re-evaluate links with the new particle
         // 4. apply force to the new particle
         // 5. Recalculate the mesh 
