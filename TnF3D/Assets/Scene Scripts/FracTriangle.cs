@@ -46,6 +46,29 @@ public class FracTriangle {
         psi = aPsi;
     }
 
+    public bool Intersects(Vector3 planeNormal, Vector3 planePoint, float d, GameObject point, List<Vector3> intersectionTips)
+    {
+        bool intersects = false;
+
+        GetSegmentPlaneIntersection(0, 1, planeNormal, d, intersectionTips);
+        GetSegmentPlaneIntersection(1, 2, planeNormal, d, intersectionTips);
+        GetSegmentPlaneIntersection(2, 0, planeNormal, d, intersectionTips);
+        
+        for(int i = 0; i < 3; ++i)
+        {
+            FracParticle fp = p[i].GetComponent<FracParticle>();
+
+            if (!fp.SideIsSet)
+            {
+                // assign a side to points
+                float side = Vector3.Dot(p[i].transform.position - planePoint, planeNormal);
+                fp.Side = side > 0;
+            }
+            
+        }
+
+        return intersects; 
+    }
 
 
     public void CalculateForces()
@@ -279,6 +302,42 @@ public class FracTriangle {
             V[i, 1] = v2[i]; 
             V[i, 2] = v3[i]; 
         }
+    }
+
+    // This section uses the code from : http://stackoverflow.com/questions/3142469/determining-the-intersection-of-a-triangle-and-a-plane
+    private float DistFromPlane(Vector3 p, Vector3 planeNormal, float d)
+    {
+        return Vector3.Dot(p, planeNormal) + d;
+    }
+
+    private void GetSegmentPlaneIntersection(int idA, int idB, Vector3 planeNormal, float d, List<Vector3> segTips)
+    {
+        Vector3 p0 = p[idA].transform.position;
+        Vector3 p1 = p[idB].transform.position;
+
+        float d1 = DistFromPlane(p0, planeNormal, d);
+        float d2 = DistFromPlane(p1, planeNormal, d);
+
+        float eps = 0.001f; 
+        bool bP1OnPlane = Mathf.Abs(d1) < eps;
+        bool bP2OnPlane = Mathf.Abs(d2) < eps;
+
+        if (bP1OnPlane && !segTips.Exists(item => item.Equals(p0)))
+            segTips.Add(p0);
+
+        if (bP2OnPlane && !segTips.Exists(item => item.Equals(p1)))
+            segTips.Add(p1);
+
+        if (bP1OnPlane && bP2OnPlane)
+            return;
+
+        if (d1 * d2 > eps)
+            return;
+
+        float t = d1 / (d1 - d2);
+        Vector3 res = p0 + t * (p1 - p0);
+        if(!segTips.Exists(item => item.Equals(res)))
+            segTips.Add(res); 
     }
 
 }

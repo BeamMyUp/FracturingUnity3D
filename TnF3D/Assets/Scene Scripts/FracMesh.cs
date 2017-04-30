@@ -13,6 +13,7 @@ public class FracMesh : MonoBehaviour
     double lambda; // Lame constant lambda : resistance to changes in volume (dilation)
     double phi;
     double psi;
+    double tau;
 
     // Getters/Setters
     public int nParticles
@@ -21,12 +22,13 @@ public class FracMesh : MonoBehaviour
     }
 
     // TODO: find phi and psi meaning...
-    public void InitializeFracMesh(double rigidity, double dilation, double aPhi, double aPsi)
+    public void InitializeFracMesh(double rigidity, double dilation, double aPhi, double aPsi, double toughness)
     {
         mu = rigidity;
         lambda = dilation;
         phi = aPhi;
         psi = aPsi;
+        tau = toughness;
     }
 
     public void CreateMesh(int[] indices)
@@ -57,7 +59,7 @@ public class FracMesh : MonoBehaviour
         particles[0].GetComponent<Rigidbody>().mass = 3;
     }
 
-    public void CreateParticle(Vector3 position, int idListPos)
+    public GameObject CreateParticle(Vector3 position)
     {
         GameObject particle = GameObject.CreatePrimitive(PrimitiveType.Sphere);
         particle.AddComponent<FracParticle>();
@@ -68,7 +70,9 @@ public class FracMesh : MonoBehaviour
 
         particle.transform.position = position;
         particle.transform.localScale = new Vector3(0.5f, 0.5f, 0.5f);
-        particles.Insert(idListPos, particle);
+        particles.Add(particle);
+
+        return particle;
     }
 
     public void CreateTriangle(int id1, int id2, int id3)
@@ -132,10 +136,10 @@ public class FracMesh : MonoBehaviour
 
     private void Fracture()
     {
-        // Reinitialize force accumulators of all particles
+        // Reinitialize force accumulators and fracturing information of all particles
         for(int i = 0; i < particles.Count; ++i)
         {
-            particles[i].GetComponent<FracParticle>().ReinitializeForce();
+            particles[i].GetComponent<FracParticle>().Reinitialize();
         }
 
         // Compute all forces applied to a particle and update force accumulators
@@ -148,7 +152,33 @@ public class FracMesh : MonoBehaviour
         for(int i = 0; i < particles.Count; ++i)
         {
             List<Vector<double>> planes = new List<Vector<double>>();
-            particles[i].GetComponent<FracParticle>().isFracturing(mu, planes); // TODO: verify mu is material's toughness
+            if(particles[i].GetComponent<FracParticle>().isFracturing(tau, planes))
+            {
+                Vector3 planeN = new Vector3();
+                planeN.x = (float)planes[0].At(0);
+                planeN.y = (float)planes[0].At(1);
+                planeN.z = (float)planes[0].At(2);
+
+                Vector3 pos = particles[i].transform.position;
+                float d = Mathf.Sqrt(pos.x * pos.x + pos.y * pos.y + pos.z * pos.z);
+
+                // Duplicate Particle and add the new point at the end of the vector
+                GameObject newP = DuplicateParticle(i);
+                FracParticle fp = newP.GetComponent<FracParticle>();
+                fp.Side = true; // the new particle is defined as on the positive side of the plane by convention
+
+                for(int tri = 0; tri < triangles.Count; ++tri)
+                {
+                    // Check for intersection and assign side; only test on first plane for now
+                    List<Vector3> tips = new List<Vector3>();
+                    bool isIntersectingElem = triangles[tri].Intersects(planeN, pos, d, particles[i], tips);
+
+                    if(isIntersectingElem)
+                    {
+                        // cut the element in two following tips point!! 
+                    }
+                }
+            }
         }
 
 
@@ -158,13 +188,13 @@ public class FracMesh : MonoBehaviour
         // 5. Recalculate the mesh 
     }
 
-    private void DuplicateParticle(int idP2Copy, int idNewP, ref GameObject newP)
+    private GameObject DuplicateParticle(int idP2Copy)
     {
         GameObject iniP = particles[idP2Copy];
         Vector3 pos = iniP.transform.position;
         Vector3 vecPos = new Vector3(pos.x, pos.y, pos.z);
 
-        CreateParticle(vecPos, idNewP);
+        return CreateParticle(vecPos);
     }
 
     void Update()

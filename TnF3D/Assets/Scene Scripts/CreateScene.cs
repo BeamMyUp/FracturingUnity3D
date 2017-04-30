@@ -44,7 +44,7 @@ public class CreateScene : MonoBehaviour {
             for (int x = -lowerlim; x < higherlim; ++x)
             {
                 Vector3 pos = new Vector3(x, 0, z);
-                fm.CreateParticle(pos, fm.nParticles); 
+                fm.CreateParticle(pos); 
             }
 
         // Assign springs
@@ -75,7 +75,7 @@ public class CreateScene : MonoBehaviour {
         // Create a first Fracturable Mesh
         GameObject initObject = new GameObject();
         FracMesh fm = initObject.AddComponent<FracMesh>();
-        fm.InitializeFracMesh(2650000, 3970000, 264, 397);
+        fm.InitializeFracMesh(2650000, 3970000, 264, 397, 13.2);
 
         CreateSpringGrid(fm);
         CreateSquareMesh(fm);

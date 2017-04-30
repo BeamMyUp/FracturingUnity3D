@@ -206,6 +206,7 @@ The joints that were selected are springs defined by a custom script. Connecting
 Unity's physics solver parameters have been set to the maximum number of iterations and the accuracy of the resulting velocity after a bounce was also augmented $Default\ solver\ iteration = 255$ and $Default\ solver\ velocity = 15$. This lowers the overall performance but as we are only testing for one object, the former is not an issue.
 
 \subsubsection{Remeshing}
+- Only manage one fracture plane per point... ignore all the others
 
 \section{Results}
 
@@ -220,6 +221,8 @@ An accessible improvement to do to this project would be to extend it to full 3D
 In order to manage a larger range of materials, it would be useful to implement a Linear Backward Euler solver in Unity. It would imply getting rid of most of the used elements of \textit{PhysX} simulation and recoding it, inserting the solver calculations into a \textit{Monobehaviour} class' \textit{Update} function. Such an extension to the current project would allow to handle a higher stiffness on the springs and would guarantee much more stability of the system in general. 
 
 Another avenue would be the investigate and experiment more with Unity's joints. It was surprising to us that the connection between two rigid bodies using a \textit{SpringJoint} was not giving the expected result. The community mentions the fact that using the latter inside the Editor, would now allow to have more than one joint connected per rigid body and recommend using parenting with unique joints on each elements of the hierarchy. Succeeding in getting the expected behaviour from the \textit{SpringJoints} would help assessing the pertinence of a self-implemented solver.  
+
+- Add management of multiple planes per point fracturing (as in the paper) when more than one eigen value
 
 - talk about \cite{Parker:2009:RTD}, \cite{Rivers:2007:FFL} and maybe other fracturing techniques
 

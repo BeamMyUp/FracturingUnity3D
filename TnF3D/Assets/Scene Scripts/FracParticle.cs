@@ -6,16 +6,33 @@ using MathNet.Numerics.LinearAlgebra;
 using MathNet.Numerics.LinearAlgebra.Factorization;
 
 public class FracParticle : MonoBehaviour {
-    
+
     List<Vector<double>> tensilForces = new List<Vector<double>>();
     List<Vector<double>> compressiveForces = new List<Vector<double>>();
 
     Matrix<double> separationTensor = Matrix<double>.Build.Dense(3, 3);
 
-    public void ReinitializeForce()
+    bool isOnPositiveSide = false; // tells whether a particle is on the positive or negative side of a fracture
+    bool isAlreadySet = false;
+
+    public bool Side
+    {
+        get { return isOnPositiveSide; }
+        set { isOnPositiveSide = value;
+            isAlreadySet = true; }
+    }
+
+    public bool SideIsSet
+    {
+        get { return isAlreadySet; }
+    }
+
+    public void Reinitialize()
     {
         tensilForces.Clear();
-        compressiveForces.Clear(); 
+        compressiveForces.Clear();
+        isOnPositiveSide = false;
+        isAlreadySet = false; 
     }
 
     public void AddTensilLoad(Vector<double> aTensilForce)
@@ -28,9 +45,9 @@ public class FracParticle : MonoBehaviour {
         compressiveForces.Add(aCompressiveForce);
     }
 
-    public bool isFracturing(double toughness, List<Vector<double>> fracPlanesOrientation)
+    public bool isFracturing(double toughness, List<Vector<double>> fracPlaneNormals)
     {
-        fracPlanesOrientation.Clear();
+        fracPlaneNormals.Clear();
 
         CalculatePointSeparationTensor();
         Evd<double> evd = separationTensor.Evd();
@@ -39,21 +56,14 @@ public class FracParticle : MonoBehaviour {
         bool fracturesAtNode = vp > toughness; // does at least one eigenvalue exceeds toughness
                                                //Debug.Log("vp = " + vp + "\n");
 
-        if (vp > 0)
-        {
-            int i = 2 + 3;
-            print(i); 
-        }
-
-
 
         // Note : More efficient to simply loop on all since there's just 3 eigenvalue. Sorting is not that useful here.
         for (int i = 0; fracturesAtNode && i < evd.EigenValues.Count; ++i)
         {
             if (evd.EigenValues[i].Real > toughness)
             {
-                Vector<double> fracPlaneOrientation = evd.EigenVectors.Column(i);
-                fracPlanesOrientation.Add(fracPlaneOrientation);
+                Vector<double> fracPlaneNormal = evd.EigenVectors.Column(i);
+                fracPlaneNormals.Add(fracPlaneNormal);
             }
         }
 
