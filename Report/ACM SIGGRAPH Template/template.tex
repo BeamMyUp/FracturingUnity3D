@@ -16,6 +16,8 @@
 \usepackage[normalem]{ulem}
 \usepackage{bm}
 \usepackage{enumitem}
+\usepackage{algorithm}
+\usepackage[noend]{algpseudocode}
 
 %%% Make the ``BibTeX'' word pretty...
 
@@ -56,20 +58,24 @@ Lucasfilm Ltd. All rights reserved. Image taken from Parker and O'Brien, 2009}
 \copyrightspace
 
 \section{Abstract}
-This project is an attempt at replicating \cite{Obrien:1999:GMA}'s cracking and fracturing work in Unity 3D, using it's \textit{PhysX} physics engine. The work relies on calculating stress tensors for the different triangles of a mesh and analyse the corresponding forces to describe if the object will break and if the latter case, where and how it will fracture. Based on the latter information, remeshing of the object is executed. For simplification, our implementation only handles 2D meshes, allowing to do the tensor calculations on triangles instead of on tetrahedrons. TALK ABOUT RESULTS!!!!!!
+This project is an attempt at replicating \cite{Obrien:1999:GMA}'s cracking and fracturing work in Unity 3D, leveraging its \textit{PhysX} physics engine. The work relies on calculating stress tensors for the different triangles of a mesh and analyse the corresponding forces to assess if the object will fracture and where and how it will do so. Based on the latter information, remeshing of the object is executed. For simplification, our implementation only handles 2D meshes, allowing to do the tensor calculations on triangles instead of on tetrahedrons. 
 
 \section{Introduction}
 A lot of different objects, when under some persistent and or increasing forces, will end up getting distorted and breaking apart. Because virtual objects are often put in such situations in video games, movies or simulations, addressing this topic is very pertinent and interesting in order to recreate realistic sequences.  
 
 The project presented is the implementation of an interactive application allowing for deformation, tearing and fracturing of meshes in real-time, according to the method described in \cite{Obrien:1999:GMA}. 
 
-The initial proposal was to implement the work of \cite{Parker:2009:RTD}. While the overall work adds to the fracturing algorithm, the latter described in their fifth section is basically the same as \cite{Obrien:1999:GMA} except that they don't replicate tetrahedrons while remeshing. Deciding to focus more on the fracturing algorithm lead us to concentrate on \cite{Obrien:1999:GMA}'s method exclusively. 
+The initial proposal was to implement the work of \cite{Parker:2009:RTD}. While the overall work adds to the fracturing algorithm, the section specifically dedicated to fracturing is very similar to  \cite{Obrien:1999:GMA}'s method except that they don't replicate tetrahedrons while remeshing. To focus more on the fracturing algorithm, we worked on \cite{Obrien:1999:GMA}'s method exclusively. 
 
 \section{Related Work}
-Fracturing of objects is a 
+Fracturing of objects is a well studied topic for which many approaches were proposed. While many models are based of physically based methods, some also proposed less physically perfect but visually appealing techniques such as procedural algorithms. 
+
+This work is mainly based of the algorithm described by \cite{Obrien:1999:GMA} which models a fracture using a separation tensor, calculated over the volume of a mesh. They calculate the separation tensors of a point based on the force tensors of connecting tetrahedral elements. 
+
+\cite{Parker:2009:RTD} Propose improvements upon \cite{Obrien:1999:GMA}, optimizing and adapting its work, using many ideas proposed in the literature, in order to provide a system that simulates fractures and deformations in a real-time context.
 
 \section{Technical details}
-As this project is mainly the implementation of \cite{Obrien:1999:GMA} for a 2D mesh in Unity, most of the technical details revolves around adapting the algorithm to the Unity context and how to leverage Unity's physics Engine to handle collisions and most physics aspects unrelated directly to fracturing. To understand better the work that has been made, we'll describe the algorithm  implemented and then the implementation details themselves. 
+As this project is mainly the implementation of \cite{Obrien:1999:GMA} for a 2D mesh in Unity, most of the technical details revolves around adapting the algorithm to the Unity context and how to leverage Unity's physics Engine to handle collisions and most physics aspects unrelated directly to fracturing. To understand better the work that has been made, we'll describe the modifications made to \cite{Obrien:1999:GMA}'s algorithm and the technical aspects needed to implement it in Unity.
 
 \subsection{Fracturing}
 \label{sec:Fracturing}
@@ -158,12 +164,12 @@ Having the sets of tensile and compressive forces applied by each elements attac
 \pmb{\zeta} = \frac{1}{2}\left(-\pmb{\mathrm{m}}(\pmb{f}^+) + \sum_{\pmb{f} \in {\pmb{f}^+}} \pmb{\mathrm{m}}(\pmb{f}) +\pmb{\mathrm{m}}(\pmb{f}^-) - \sum_{\pmb{f} \in {\pmb{f}^-}} \pmb{\mathrm{m}}(\pmb{f}) \right).
 \end{gather}
 
-A fracture is happening at the point evaluated if the largest positive eigenvalue $\mathrm{v}^+$ of $\pmb{\zeta}$ is greater than $\tau$, the material toughness. Taking the corresponding eigenvector $\mathrm{\pmb{\hat{n}}}^+$, we get the fracture plane which is perpendicular. 
+A fracture is happening at the point evaluated if the largest positive eigenvalue $\mathrm{v}^+$ of $\pmb{\zeta}$ is greater than $\tau$, the material toughness. Taking the corresponding eigenvector $\mathrm{\pmb{\hat{n}}}^+$, we get the fracture plane's normal.
 
 These calculations are all exactly the same as described in \cite{Obrien:1999:GMA} except for the dimensions of the matrices $\pmb{P}$, $\pmb{V}$ and $\pmb{\beta}$ that are adapted for three nodes instead of four and the number of iterations of the first sum in \eqref{eqfp} and \eqref{eqfm} that has also been brought down to three. 
 
 \subsection{Implementation}
-The methods and algorithms described were implemented in Unity3D with the use of custom scripts. The project's setup is a scene composed of three (3) \textit{GameObject}s; a \textit{Camera}, a \textit{Light} and a \textit{Scene Manager}. To allow interaction with the objects, a basic First Person Camera behaviour was implemented and added to the \textit{Camera object}. The \textit{Scene Manager} object has two \textit{Script Components}. The first one describes the creation of the test scene, with an object that can be fractured and the second one allows for picking and dragging objects in the scene using an external force. 
+The methods and algorithms described were implemented in Unity3D with the use of custom scripts. The project's setup is a scene composed of three \textit{GameObject}s; a \textit{Camera}, a \textit{Light} and a \textit{Scene Manager}. To allow interaction with the objects, a basic First Person Camera behaviour was implemented and added to the \textit{Camera object}. The \textit{Scene Manager} object has two \textit{Script Components}. The first one describes the creation of the test scene, with an object that can be fractured and the second one allows for picking and dragging objects in the scene using an external force. 
 
 \subsection{Interactions}
 As this project is based of an empty 3D scene in Unity, we added some simple interaction options for the purpose of this project. Basic first person controls were added to the scene's camera. 
@@ -187,7 +193,7 @@ A fracturable object is made of a set of particles that are managed by Unity's P
 
 \begin{figure}[ht]
   \centering
-  \includegraphics[width=3.0in]{images/MeshDescription}
+  \includegraphics[width=2.5in]{images/MeshDescription}
   \caption{Structure of the implemented Mesh}
   \label{fig:meshdescription}
 \end{figure}
@@ -195,39 +201,49 @@ A fracturable object is made of a set of particles that are managed by Unity's P
 The figure \ref{fig:meshdescription} visually present the relation between the different particles, the springs and the triangles. The dimensions of the 2D object are controlled by a single parameter \textit{MeshPoints} that controls how many points on each axis there would be, forming a square shaped plane. The object's particles coordinates vary in $x$ and $z$ between $[-MeshPoints/2, MeshPoints/2 + MeshPoints\% 2]$ and the $y$ coordinates are set to 0. 
 
 \subsubsection{Joints between particles}
-A challenging part of this project was to define the joints between the particles. For this project, 3 different joints were tested: Spring Joints, Hinge Joints and custom scripted springs. 
+A challenging part of this project was to define the joints between the particles. three different joints were tested: Spring Joints, Hinge Joints and custom scripted springs. 
 
 Spring joints is the most intuitive choice of structure as we are looking for very stiff springs to attach all particles together. After trying a lot of different parameters, it is difficult to get the springs to not only act stiff but to properly transmit force to the linked rigid bodies in our particular setup. 
 
-We then tried Hinge Joints. As it doesn't make a lot of sense theoretically, using this structure along with a spring gave good visual results and a more stiff structure. However, it wasn't satisfying, as this joint would not allow much deformation within the object.
+We then tried Hinge Joints. Using this structure along with a spring gave good visual results and a stiffer structure. However, it wasn't satisfying, as this joint impose motion restriction that doesn't apply to our context.
 
-The joints that were selected are springs defined by a custom script. Connecting all particles with these custom springs allows for enough deformation within the material to calculate a difference in velocities between two particles that would induce a fracture. The chosen stiffness for all spring had $k = 800$ and the damping $c = 10$. This gave us a good compromise between stiffness and stability. Unity's solver gets unstable when the stiffness of the springs is too high and having the parameter k to a even higher value in order to represent tougher materials would make the system blow up. 
+The joints that are used in the final project are springs defined by a custom script. Connecting all particles with these allows for enough deformation within the material to calculate a difference in velocities between two particles that would induce a fracture. The chosen stiffness for all springs is $k = 800$ and the damping is $c = 10$. This happened to be a good compromise between stiffness and stability. Unity's solver gets unstable when the stiffness of the springs is too high and having the parameter $k$ to a even higher value in order to represent tougher materials would make the system blow up. For using those joints, we also added a drag of 5 to the rigid bodies, which were otherwise behaving as frictionless objects.  
 
 Unity's physics solver parameters have been set to the maximum number of iterations and the accuracy of the resulting velocity after a bounce was also augmented $Default\ solver\ iteration = 255$ and $Default\ solver\ velocity = 15$. This lowers the overall performance but as we are only testing for one object, the former is not an issue.
 
 \subsubsection{Remeshing}
-The eigenvector returned by the separation tensor corresponds to the normal of the separation plane. Once a fracture is found, we go through all triangles of the mesh to verify if they intersect with the separation plane, using \cite{Inters}'s algorithm. If so, triangles are separated along the intersection line, adding two new particles at these points and recalculating the joints between the points. Each points are also mapped to a side of another of the plane using a boolean value for which false means a node is on the negative side of the plane whereas true means the node is on the positive side. We avoid setting the side of a node two times by keeping another boolean value that informs if the calculations have already been made for the particle. 
+The eigenvector returned by the separation tensor corresponds to the normal of the separation plane. Once a fracture is found, we go through all triangles of the mesh to verify if they are connected to the point of fracture and then if they intersect with the separation plane, using \cite{Inters}'s algorithm. Each points of connected triangles are mapped to a side of another of the plane using a boolean value for which \textit{false} means a node is on the negative side of the plane whereas \textit{true} means the node is on the positive side. We avoid setting the side of a node two times by keeping another boolean value that informs if the calculations have already been made for the particle. 
 
-\section{Results}
+\begin{figure}[ht]
+  \centering
+  \includegraphics[width=3.5in]{images/fractures}
+  \caption{Remeshing Steps and triangle creation}
+  \label{fig:remeshing}
+\end{figure}
 
+If the plane intersects with a triangle, the latter is separated along the intersection line. First, the particle where the fracture happens is duplicated. Then we test if the plane goes through an already existing node. If so, we undergo simple reassignment of springs between the duplicated node, the original node itself and the existing node on the plane. Otherwise, a new particle is created at the intersection point. This implies a more complex spring reassignment step, as the springs on which the new node is positioned needs to be divided in two and new connections needs to be created to conserve the mesh's integrity. The resulting remeshing is presented in figure \ref{fig:remeshing}, where are illustrated the fracture plane, the original and the duplicated particles, the new particle in the first case and the sides (plus or minus) of each nodes connecting to the point where the fracture initiates. In turquoise is shown the affected triangles and the new ones created. 
 
+Based on the new spring connections, we then update the mesh fully, redefining new triangles and indices. 
 
-\section{Conclusions}
+\section{Results and Discussion}
 
-REDESCRIBE RESULTS!!!!!!
+DESCRIBE RESULTS
 
-An accessible improvement to do to this project would be to extend it to full 3D shapes, like described in \cite{Obrien:1999:GMA}. The fracturing algorithm and calculations are pretty much the same except for the few tweaks made to use three nodes instead of four as described in section \ref{sec:Fracturing}. The remeshing is probably the most challenging part of this extension and would likely account for the biggest amount of work to be done. 
+Even though there is only one \textit{FracMesh} object for the whole scene, we are able to handle fully divided meshes. Because of the independent handling of the particles, the two sections will physically and visually act as two separate meshes. 
 
-In order to manage a larger range of materials, it would be useful to implement a Linear Backward Euler solver in Unity. It would imply getting rid of most of the used elements of \textit{PhysX} simulation and recoding it, inserting the solver calculations into a \textit{Monobehaviour} class' \textit{Update} function. Such an extension to the current project would allow to handle a higher stiffness on the springs and would guarantee much more stability of the system in general. 
+Even though many eigenvalues of the separation tensors are greater than the material's toughness, our algorithm only handles one separation plane, contrary to what is proposed by \cite{Obrien:1999:GMA}.
 
-Another avenue would be the investigate and experiment more with Unity's joints. It was surprising to us that the connection between two rigid bodies using a \textit{SpringJoint} was not giving the expected result. The community mentions the fact that using the latter inside the Editor, would now allow to have more than one joint connected per rigid body and recommend using parenting with unique joints on each elements of the hierarchy. Succeeding in getting the expected behaviour from the \textit{SpringJoints} would help assessing the pertinence of a self-implemented solver.  
+An accessible improvement to this project would be to extend it to full 3D shapes, like described in \cite{Obrien:1999:GMA}. The fracturing algorithm and calculations are pretty much the same except for the few tweaks made to use three nodes instead of four as described in section \ref{sec:Fracturing}. The remeshing is probably the most challenging part of this extension and would likely account for the biggest amount of work to be done. 
 
-- Add management of multiple planes per point fracturing (as in the paper) when more than one eigen value
+In order to manage a larger range of materials, it would be useful to implement a Linear Backward Euler solver in Unity. It would imply getting rid of most of the used features of the \textit{PhysX} Engine and recoding them, inserting the solver calculations into a \textit{Monobehaviour} class' \textit{Update} function. Such an extension to the current project would allow to handle a higher stiffness on the springs and would guarantee much more stability of the system in general. 
 
-- talk about \cite{Parker:2009:RTD}, \cite{Rivers:2007:FFL} and maybe other fracturing techniques
+Finally, the collision detection is only enabled in the project on the rigid bodies. It would be useful to improve the overall project with collision detection on the mesh with itself, to avoid particles to inter-penetrate the mesh. 
 
-- Test with more complex shapes... 
+\section{Conclusion}
 
+In this project, we first built a simple scene within Unity and implemented basic interaction options. We defined a plane creation sequence that automatically create a fracturable object, constituted of particles, springs and triangles. A mesh is then mapped on top of the particles using their positions as the vertices' coordinates. Once all components are created, we undergo fracture testing at each update of the scene using \cite{Obrien:1999:GMA} algorithm, modified for triangular elements instead of tetrahedral ones. If a point should be fracturing, we calculate the fracture plane's normal and for each triangles connected to the point, we verify if they intersects with the plane. If so, we compute at which point the intersection happens. We also attribute a plane side to each particles connected to the point of fracture which helps proper remeshing. An triangle intersecting the plane is divided along the intersection line. Springs are consequently redistributed in such a way to take account of the new mesh's shape and finally the mesh's updated.
+
+Latter improvement of this work made many optimizations, improved mesh deformation handling, allowed more precise tearing and fracturing of different material, proposed procedural approaches, etc.  
 
 
 

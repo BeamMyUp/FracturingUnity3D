@@ -15,6 +15,21 @@ public class FracParticle : MonoBehaviour {
     bool isOnPositiveSide = false; // tells whether a particle is on the positive or negative side of a fracture
     bool isAlreadySet = false;
 
+    int index; // position in the vertex buffer
+
+    List<Spring> connectedSpringsForward;
+    List<Spring> connectedSpringsBackward; 
+
+    public List<Spring> SpringsForward
+    {
+        get { return connectedSpringsForward; }
+    }
+
+    public List<Spring> SpringsBackward
+    {
+        get { return connectedSpringsBackward; }
+    }
+
     public bool Side
     {
         get { return isOnPositiveSide; }
@@ -25,6 +40,16 @@ public class FracParticle : MonoBehaviour {
     public bool SideIsSet
     {
         get { return isAlreadySet; }
+    }
+
+    public int Id
+    {
+        get { return index; }
+    }
+
+    public void Initialize(int VBOindex)
+    {
+        index = VBOindex; 
     }
 
     public void Reinitialize()
