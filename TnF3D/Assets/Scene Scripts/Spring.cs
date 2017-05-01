@@ -8,7 +8,7 @@ public class Spring : MonoBehaviour {
     Rigidbody p2 = null;
 
     // Spring Stiffness
-    public static double k = 800;
+    public static double k = 700;
 
     // Spring damping
     public static double c = 10;
@@ -19,27 +19,42 @@ public class Spring : MonoBehaviour {
     public Rigidbody P1
     {
         get { return p1; }
-        set { Initialize(value, p2);} // HACK: this would blow if p1 is not already set. 
     }
 
     public Rigidbody P2
     {
         get { return p2; }
-        set { Initialize(p1, value); } // HACK: this would blow if p2 is not already set. 
     }
 
-    public void Initialize(Rigidbody p1, Rigidbody p2)
+    public void Initialize(Rigidbody P1, Rigidbody P2)
     {
-        this.p1 = p1;
-        this.p2 = p2;
+        if(p1 != null)
+        {
+            p1.gameObject.GetComponent<FracParticle>().Springs.Remove(this);
+        }
+        if(p2 != null)
+        {
+            p2.gameObject.GetComponent<FracParticle>().Springs.Remove(this);
+        }
+
+        p1 = P1;
+        p2 = P2;
         l0 = Vector3.Distance(p1.transform.position, p2.transform.position);
+
+        p1.gameObject.GetComponent<FracParticle>().Springs.Add(this);
+        p2.gameObject.GetComponent<FracParticle>().Springs.Add(this);
+    }
+    
+    public GameObject GetOtherPoint(GameObject p)
+    {
+        if (p == p1.gameObject)
+            return p2.gameObject;
+        if (p == p2.gameObject)
+            return p1.gameObject;
+
+        return null; 
     }
 
-	// Use this for initialization
-	void Start () {
-		
-	}
-	
     void CalculateSpringForce()
     {
         Vector3 l = p1.transform.position - p2.transform.position;

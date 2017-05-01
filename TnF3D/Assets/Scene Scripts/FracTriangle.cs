@@ -27,6 +27,12 @@ public class FracTriangle {
     double halfArea;
     List<Vector<double>> forcesP = new List<Vector<double>>(); // Forces in the order of the points
 
+    public GameObject[] Points
+    {
+        get { return p; }
+    }
+
+
     public FracTriangle(
         Matrix4x4 aWorld2MaterialTransform, 
         GameObject[] aParticleList, 

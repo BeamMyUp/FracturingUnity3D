@@ -48,9 +48,8 @@
 %%% the title and author information, and above the body of the content.
 
  \teaser{
-   \includegraphics[height=0.98in]{images/Teaser}
-   \caption{Star Wars: The Force Unleashed game content and screenshots courtesy of LucasArts, a division of Lucasfilm Entertainment Company Ltd. \copyright 2009 Lucasfilm Entertainment Company Ltd. or
-Lucasfilm Ltd. All rights reserved. Image taken from Parker and O'Brien, 2009}
+   \includegraphics[height=2in]{images/Teaser}
+   \caption{In-Game view of the Project's scene and interaction}
  }
 
 \maketitle
@@ -223,15 +222,17 @@ The eigenvector returned by the separation tensor corresponds to the normal of t
 
 If the plane intersects with a triangle, the latter is separated along the intersection line. First, the particle where the fracture happens is duplicated. Then we test if the plane goes through an already existing node. If so, we undergo simple reassignment of springs between the duplicated node, the original node itself and the existing node on the plane. Otherwise, a new particle is created at the intersection point. This implies a more complex spring reassignment step, as the springs on which the new node is positioned needs to be divided in two and new connections needs to be created to conserve the mesh's integrity. The resulting remeshing is presented in figure \ref{fig:remeshing}, where are illustrated the fracture plane, the original and the duplicated particles, the new particle in the first case and the sides (plus or minus) of each nodes connecting to the point where the fracture initiates. In turquoise is shown the affected triangles and the new ones created. 
 
-Based on the new spring connections, we then update the mesh fully, redefining new triangles and indices. 
+Based on the new spring connections, we create new triangles. Using the list of triangles now updated, we can update the index buffer and the mesh consequently. 
 
-\section{Results and Discussion}
+\section{Results}
+Due to an optimistic prevision of the actual challenge and time needed to implement the remeshing algorithm, the latter was not completed. The challenge lies in the redefinition of the triangles according to the springs connected to a point. A better way of handling the problem at hand would have been to actually define a triangle by three springs and recalculating the particles that forms it's points at each spring modifications. A spring should also have a list of the triangles that are separated by it, such that it is easy to remesh locally an area, knowing what triangles are affected by a modification. Because the code's structure wasn't thought that way initially, this refactoring is quite time exigent and that is why it wasn't integrated in the submitted code. 
 
-DESCRIBE RESULTS
+The attached video shows all other components of the algorithm, including the fracturing calculation in play. This shows the results of the fracturing calculations. 
 
-Even though there is only one \textit{FracMesh} object for the whole scene, we are able to handle fully divided meshes. Because of the independent handling of the particles, the two sections will physically and visually act as two separate meshes. 
+\section{Discussion}
+Even though there is only one \textit{FracMesh} object for the whole scene, we would be able to handle fully divided meshes. Because of the independent handling of the particles, the two sections will physically and visually act as two separate meshes. 
 
-Even though many eigenvalues of the separation tensors are greater than the material's toughness, our algorithm only handles one separation plane, contrary to what is proposed by \cite{Obrien:1999:GMA}.
+While there may be more than one eigenvalues of the separation tensors that are greater than the material's toughness. Our algorithm only handles one separation plane, contrary to what is proposed by \cite{Obrien:1999:GMA}.
 
 An accessible improvement to this project would be to extend it to full 3D shapes, like described in \cite{Obrien:1999:GMA}. The fracturing algorithm and calculations are pretty much the same except for the few tweaks made to use three nodes instead of four as described in section \ref{sec:Fracturing}. The remeshing is probably the most challenging part of this extension and would likely account for the biggest amount of work to be done. 
 
@@ -241,10 +242,9 @@ Finally, the collision detection is only enabled in the project on the rigid bod
 
 \section{Conclusion}
 
-In this project, we first built a simple scene within Unity and implemented basic interaction options. We defined a plane creation sequence that automatically create a fracturable object, constituted of particles, springs and triangles. A mesh is then mapped on top of the particles using their positions as the vertices' coordinates. Once all components are created, we undergo fracture testing at each update of the scene using \cite{Obrien:1999:GMA} algorithm, modified for triangular elements instead of tetrahedral ones. If a point should be fracturing, we calculate the fracture plane's normal and for each triangles connected to the point, we verify if they intersects with the plane. If so, we compute at which point the intersection happens. We also attribute a plane side to each particles connected to the point of fracture which helps proper remeshing. An triangle intersecting the plane is divided along the intersection line. Springs are consequently redistributed in such a way to take account of the new mesh's shape and finally the mesh's updated.
+In this project, we first built a simple scene within Unity and implemented basic interaction options. We defined a plane creation sequence that automatically create a fracturable object, constituted of particles, springs and triangles. A mesh is then mapped on top of the particles using their positions as the vertices' coordinates. Once all components are created, we undergo fracture testing at each update of the scene using \cite{Obrien:1999:GMA} algorithm, modified for triangular elements instead of tetrahedral ones. If a point should be fracturing, we calculate the fracture plane's normal and for each triangles connected to the point, we verify if they intersects with the plane. If so, we compute at which point the intersection happens. We also attribute a plane side to each particles connected to the point of fracture which helps proper remeshing. An triangle intersecting the plane is intended to be divided along the intersection line. Springs are consequently redistributed in such a way to take account of the new mesh's shape. The second to last step would be to reform the resulting triangle list. The latter posed a bigger challenge than expected and was therefore not completed. The last step is the general mesh updating which was implemented. 
 
-Latter improvement of this work made many optimizations, improved mesh deformation handling, allowed more precise tearing and fracturing of different material, proposed procedural approaches, etc.  
-
+On top of the completion of the triangle redefinition, there would be a lot more improvements that could be made to this project. Amongst others, we could consider implementing our own Backward Euler Solver, be able to handle 3D shapes, add management for many separation planes, etc.  
 
 
 %%\section{Figures and Tables and Captions}

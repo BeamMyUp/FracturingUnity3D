@@ -17,17 +17,11 @@ public class FracParticle : MonoBehaviour {
 
     int index; // position in the vertex buffer
 
-    List<Spring> connectedSpringsForward;
-    List<Spring> connectedSpringsBackward; 
+    List<Spring> connectedSprings = new List<Spring>();
 
-    public List<Spring> SpringsForward
+    public List<Spring> Springs
     {
-        get { return connectedSpringsForward; }
-    }
-
-    public List<Spring> SpringsBackward
-    {
-        get { return connectedSpringsBackward; }
+        get { return connectedSprings; }
     }
 
     public bool Side

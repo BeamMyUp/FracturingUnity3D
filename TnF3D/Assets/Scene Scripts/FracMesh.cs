@@ -57,7 +57,7 @@ public class FracMesh : MonoBehaviour
         mr.material.color = new Color(0.3f, 0.5f, 0.6f, 1.0f);
 
         // pin first particle
-        particles[0].GetComponent<Rigidbody>().mass = 3;
+        particles[0].GetComponent<Rigidbody>().mass = 10;
     }
 
     public GameObject CreateParticle(Vector3 position)
@@ -121,10 +121,6 @@ public class FracMesh : MonoBehaviour
         // ---- Test on Custom Joints
         Spring joint = particles[iRb1].AddComponent<Spring>();
         joint.Initialize(particles[iRb1].GetComponent<Rigidbody>(), particles[iRb2].GetComponent<Rigidbody>());
-        FracParticle fp1 = particles[iRb1].GetComponent<FracParticle>();
-        FracParticle fp2 = particles[iRb2].GetComponent<FracParticle>();
-        fp1.SpringsForward.Add(joint);
-        fp2.SpringsBackward.Add(joint);
     }
 
     private void UpdateMesh()
@@ -181,71 +177,132 @@ public class FracMesh : MonoBehaviour
 
                     if(isIntersectingElem)
                     {
-                        // cut the element in two following tips point!! 
-                        CutElement()
+                        CutElement(i, tip, triangles[tri], particleOnPlane);
                     }
                 }
             }
         }
 
         // 5. Recalculate the mesh 
+        Remeshing(); 
     }
 
     public void CutElement(int fracturePointId, Vector3 p1, FracTriangle triangle, GameObject particleOnPlane)
     {
         // Duplicate Fracture point
-        GameObject fracElem = particles[fracturePointId];
-        FracParticle fpFrac = fracElem.GetComponent<FracParticle>();
+        GameObject originalP = particles[fracturePointId];
+        FracParticle fpOriginal = originalP.GetComponent<FracParticle>();
 
         // Duplicate Particle and assign side of plane. 
         // The new particle is defined as always on the positive side of the plane
-        GameObject dupP = DuplicateParticle(fracturePointId);
-        FracParticle fpDup = dupP.GetComponent<FracParticle>();
+        GameObject duplicateP = DuplicateParticle(fracturePointId);
+        FracParticle fpDupplicate = duplicateP.GetComponent<FracParticle>();
 
-        fpFrac.Side = false;
-        fpDup.Side = true;
+        fpOriginal.Side = false;
+        fpDupplicate.Side = true;
         
         // If the other point is an already existing particle, then no other points to create
-        GameObject secondFrac;
-        if (particleOnPlane != null) secondFrac = particleOnPlane;
-        else secondFrac = CreateParticle(p1);
-
-        // Reassign backward springs
-        for (int i = 0;  i < fpFrac.SpringsBackward.Count; ++i)
+        GameObject secondPoint;
+        if (particleOnPlane != null)
         {
-            Spring backward = fpFrac.SpringsBackward[i];
-            FracParticle bwFp = backward.P1.gameObject.GetComponent<FracParticle>();
+            secondPoint = particleOnPlane;
 
-
-            Assert.IsTrue(bwFp.SideIsSet, "FracMesh : CutElement : Side is not set. Can't reassign springs"); 
-
-            // if backward particle doesn't have the same side as the initial particle, then the spring must be
-            // re-assigned to the duplicate. Otherwise, nothing to change
-            if(bwFp.Side != fpFrac.Side)
+            // HACK: This is a poor way of doing this search. Just trying to make it work here first.
+            // Check if a spring between the originalPoint and the second point already exists
+            bool alreadyExists = false; 
+            for(int i = 0; i < fpOriginal.Springs.Count; ++i)
             {
-                backward.P2 = dupP.GetComponent<Rigidbody>();
-                fpDup.SpringsBackward.Add(backward);
-                fpFrac.SpringsBackward.Remove(backward); 
+                Spring s = fpOriginal.Springs[i];
+                if ((s.P2.gameObject == secondPoint && s.P1.gameObject == originalP) ||
+                    (s.P1.gameObject == secondPoint && s.P2.gameObject == originalP))
+                {
+                    alreadyExists = true;
+                }
             }
+
+            if(!alreadyExists)
+            {
+                Spring s = originalP.AddComponent<Spring>();
+                s.Initialize(originalP.GetComponent<Rigidbody>(), secondPoint.GetComponent<Rigidbody>());
+            }
+
+            Spring ds = duplicateP.AddComponent<Spring>();
+            ds.Initialize(duplicateP.GetComponent<Rigidbody>(), secondPoint.GetComponent<Rigidbody>());
         }
 
-        // Reassign forward springs
-        for(int i = 0; i < fpFrac.SpringsForward.Count; ++i)
-        {
-            Spring forward = fpFrac.SpringsForward[i];
-            FracParticle fwFp = forward.P2.gameObject.GetComponent<FracParticle>();
-            Assert.IsTrue(fwFp.SideIsSet, "FracMesh : CutElement: Side is not set. Can't reassign springs");
+        else secondPoint = CreateParticle(p1);
 
-            // if forward particle doesn't have the same side as the initial particle, then the spring must be
-            // re-assigned to the duplicate. Otherwise, nothing to change
-            if (fwFp.Side != fpFrac.Side)
+        // Reassign springs
+        for (int i = 0;  i < fpOriginal.Springs.Count; ++i)
+        {
+            Spring s = fpOriginal.Springs[i];
+            GameObject otherPoint = s.GetOtherPoint(originalP);
+            FracParticle sfp = otherPoint.GetComponent<FracParticle>();
+
+            if(sfp.gameObject == secondPoint)
             {
-                forward.P1 = dupP.GetComponent<Rigidbody>();
-                fpDup.SpringsForward.Add(forward);
-                fpFrac.SpringsForward.Remove(forward);
+                continue;
+            }
+            else
+            {
+                Assert.IsTrue(sfp.SideIsSet, "FracMesh : CutElement : Side is not set. Can't reassign springs");
+            }
+
+            // if spring particle doesn't have the same side as the initial particle, then the spring must be
+            // re-assigned to the duplicate. Otherwise, nothing to change
+            if (sfp.Side != fpOriginal.Side)
+            {
+                s.Initialize(otherPoint.GetComponent<Rigidbody>(), duplicateP.GetComponent<Rigidbody>());  
             }
         }
+    }
 
+    public void Remeshing()
+    {
+        List<int> indices = new List<int>();
+
+        for (int i = 0; i < triangles.Count; ++i)
+        {
+            GameObject[] p = triangles[i].Points;
+            FracParticle fp1 = p[0].GetComponent<FracParticle>();
+            FracParticle fp2 = p[1].GetComponent<FracParticle>();
+            FracParticle fp3 = p[2].GetComponent<FracParticle>();
+
+            Vector3 A = p[0].transform.position;
+            Vector3 B = p[1].transform.position;
+            Vector3 C = p[2].transform.position;
+
+            int p1 = fp1.Id;
+            int p2 = fp2.Id;
+            int p3 = fp3.Id;
+
+            Vector3 n = new Vector3(0, 1, 0);
+            float r = Vector3.Dot(n, Vector3.Cross(A - C, B - C));
+            bool isClockwise = r > 0;
+
+            if(!isClockwise)
+            {
+                p2 = fp3.Id;
+                p3 = fp2.Id;
+            }
+
+            indices.Add(p1);
+            indices.Add(p2);
+            indices.Add(p3);
+        }
+
+        Vector3[] vertices = new Vector3[particles.Count];
+        for (int i = 0; i < particles.Count; ++i)
+        {
+            vertices[i] = particles[i].transform.position;
+        }
+
+        // Create the mesh
+        Mesh msh = new Mesh();
+        msh.vertices = vertices;
+        msh.triangles = indices.ToArray();
+        msh.RecalculateNormals();
+        msh.RecalculateBounds();
     }
 
     private GameObject DuplicateParticle(int idP2Copy)
